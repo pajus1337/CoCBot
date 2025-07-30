@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "CoCBot.UI (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "CoCBot.UI (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace CoCBot.Controllers
 {
-    public class BotController
+    public class BotController : IBotController
     {
         private readonly IVisionService _vision;
         private readonly IEmulatorService _emulator;

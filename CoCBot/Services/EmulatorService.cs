@@ -1,9 +1,6 @@
-
 using CoCBot.Interfaces;
 using System.Diagnostics;
-using System.Drawing;
 using System.Runtime.InteropServices;
-using System.Windows.Forms;
 
 namespace CoCBot.Services
 {
@@ -24,7 +21,7 @@ namespace CoCBot.Services
 
         public void ClickAt(int x, int y)
         {
-            Cursor.Position = new Point(x, y);
+            SetCursorPos(x, y);
             mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, x, y, 0, 0);
         }
 
@@ -40,6 +37,9 @@ namespace CoCBot.Services
             };
             Process.Start(startInfo)?.WaitForExit();
         }
+
+        [DllImport("user32.dll")]
+        private static extern bool SetCursorPos(int X, int Y);
 
         [DllImport("user32.dll")]
         private static extern void mouse_event(int dwFlags, int dx, int dy, int cButtons, int dwExtraInfo);
