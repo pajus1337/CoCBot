@@ -14,6 +14,10 @@
     <StackPanel HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Spacing="12">
+        <ComboBox x:Name="DeviceSelector"
+                  Width="200"
+                  PlaceholderText="Select emulator"
+                  SelectionChanged="OnDeviceSelected" />
         <TextBlock x:Name="StatusText"
                    Text="Status: STOPPED"
                    FontSize="18"

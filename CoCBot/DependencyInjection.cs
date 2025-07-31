@@ -12,6 +12,7 @@ namespace CoCBot
             services.AddSingleton<IVisionService, VisionService>();
             services.AddSingleton<IEmulatorService, EmulatorService>();
             services.AddSingleton<IBotController, BotController>();
+            services.AddSingleton<IEmulatorSelectorService, EmulatorSelectorService>();
 
             return services;
         }
