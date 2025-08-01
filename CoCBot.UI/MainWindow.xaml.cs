@@ -14,7 +14,7 @@ namespace CoCBot.UI
     public sealed partial class MainWindow : Window
     {
         private readonly IBotController _botController;
-        private readonly IEmulatorSelectorService _emulatorSelectorService; 
+        private readonly IEmulatorSelectorService _emulatorSelectorService;
         public MainWindow(IBotController botController, IEmulatorSelectorService emulatorSelectorService)
         {
             InitializeComponent();

@@ -40,7 +40,7 @@ namespace CoCBot.UI
             var services = new ServiceCollection();
             services.AddBotServices();
             services.AddSingleton<MainWindow>();
-            ServiceProvider  = services.BuildServiceProvider();
+            ServiceProvider = services.BuildServiceProvider();
         }
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace CoCBot.UI
         /// <param name="args">Details about the launch request and process.</param>
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
-            _window  = ServiceProvider.GetRequiredService<MainWindow>();
+            _window = ServiceProvider.GetRequiredService<MainWindow>();
             _window.Activate();
         }
     }
