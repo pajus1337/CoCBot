@@ -1,5 +1,7 @@
 # CoCBot
 
+![Build Status](https://github.com/pajus1337/CoCBot/actions/workflows/build.yml/badge.svg?branch=dev)
+
 **CoCBot** is a modular, automation-ready bot framework designed for games like Clash of Clans. The project focuses on clean architecture, scalability, and developer collaboration from the ground up.
 
 ---
