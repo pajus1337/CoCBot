@@ -9,6 +9,7 @@ namespace CoCBot.Interfaces
 {
     public interface IVisionService
     {
+        Task ClickOnAsync(string templatePath);
         Point? FindButtonUsingTemplate(string screenPath, string templatePath, double threshold);
     }
 }

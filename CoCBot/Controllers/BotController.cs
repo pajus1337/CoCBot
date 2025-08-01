@@ -1,4 +1,5 @@
-w using CoCBot.Interfaces;
+using CoCBot.Interfaces;
+using System;
 using System.Drawing;
 using System.IO;
 using System.Threading.Tasks;
@@ -7,46 +8,40 @@ namespace CoCBot.Controllers
 {
     public class BotController : IBotController
     {
-        private readonly IVisionService _vision;
-        private readonly IEmulatorService _emulator;
+        private readonly IClanInviteService _clanInviteService;
 
         public bool IsRunning { get; private set; }
 
-        public BotController(IVisionService vision, IEmulatorService emulator)
+        public BotController(IClanInviteService clanInviteService)
         {
-            _vision = vision;
-            _emulator = emulator;
+            _clanInviteService = clanInviteService;
         }
 
         public async Task StartAsync()
         {
             IsRunning = true;
-            _emulator.Connect();
 
-            while (IsRunning)
-            {
-                _emulator.TakeScreenshot();
+            Log("[BOT] Invite automation started.");
 
-                Point? button = _vision.FindButtonUsingTemplate("screen.png", "invite_button.png", 0.9);
-                if (button != null)
-                {
-                    _emulator.ClickAt(button.Value.X, button.Value.Y);
-                    Log("[BOT] Button clicked.");
-                }
-                else
-                {
-                    Log("[BOT] Button not found.");
-                }
+            await _clanInviteService.RunAutoInviteAsync();
 
-                await Task.Delay(5000);
-            }
+            Log("[BOT] Invite automation finished.");
+            IsRunning = false;
         }
 
-        public void Stop() => IsRunning = false;
+        public void Stop()
+        {
+            Log("[BOT] Automation stopped manually.");
+            IsRunning = false;
+        }
 
         private void Log(string msg)
         {
-            File.AppendAllText("bot.log", msg + "\n");
+            var logDirectory = Path.Combine(AppContext.BaseDirectory, "Logs");
+            Directory.CreateDirectory(logDirectory);
+            var logPath = Path.Combine(logDirectory, "bot.log");
+
+            File.AppendAllText(logPath, msg + "\n");
         }
     }
 }

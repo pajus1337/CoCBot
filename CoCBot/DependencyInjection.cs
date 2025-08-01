@@ -1,7 +1,8 @@
-using Microsoft.Extensions.DependencyInjection;
-using CoCBot.Services;
-using CoCBot.Interfaces;
+using CoCBot.Configurations;
 using CoCBot.Controllers;
+using CoCBot.Interfaces;
+using CoCBot.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CoCBot
 {
@@ -9,10 +10,17 @@ namespace CoCBot
     {
         public static IServiceCollection AddBotServices(this IServiceCollection services)
         {
+            // Services
             services.AddSingleton<IVisionService, VisionService>();
             services.AddSingleton<IEmulatorService, EmulatorService>();
-            services.AddSingleton<IBotController, BotController>();
             services.AddSingleton<IEmulatorSelectorService, EmulatorSelectorService>();
+            services.AddSingleton<IClanInviteService, ClanInviteService>();
+
+            // Bot Configurations
+            services.AddSingleton(new BotPathOptions());
+
+            // Bot Controrller
+            services.AddSingleton<IBotController, BotController>();
 
             return services;
         }
