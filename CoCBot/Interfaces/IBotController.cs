@@ -9,6 +9,7 @@ namespace CoCBot.Interfaces
     public interface IBotController
     {
         Task StartAsync();
+        Task RunLeagueInviteAsync();
         void Stop();
         bool IsRunning { get; }
     }

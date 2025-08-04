@@ -51,5 +51,29 @@ namespace CoCBot.Services
 
             // TODO: Further logic like looping over members will follow later ---
         }
+
+        public async Task InvitePlayersViaMyLeagueAsync()
+        {
+            await _visionService.ClickOnAsync(Path.Combine(_paths.TemplatePath, "my_league_tab.png"));
+            await Task.Delay(1500);
+
+            for (int playerNumber = 1; playerNumber <= 100; playerNumber++)
+            {
+                string playerSlotTemplate = $"player_slot_{playerNumber}.png";
+                string playerSlotPath = Path.Combine(_paths.TemplatePath, "league_slots", playerSlotTemplate);
+
+                await _visionService.ClickOnAsync(playerSlotPath);
+                await Task.Delay(1200);
+
+                await _visionService.ClickOnAsync(Path.Combine(_paths.TemplatePath, "profile_button.png"));
+                await Task.Delay(1000);
+
+                await _visionService.ClickOnAsync(Path.Combine(_paths.TemplatePath, "invite_button.png"));
+                await Task.Delay(1000);
+
+                await _visionService.ClickOnAsync(Path.Combine(_paths.TemplatePath, "back_button.png"));
+                await Task.Delay(1000);
+            }
+        }
     }
 }

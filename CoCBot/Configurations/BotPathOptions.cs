@@ -10,6 +10,6 @@ namespace CoCBot.Configurations
     public class BotPathOptions
     {
         public string TemplatePath { get; init; } = Path.Combine(AppContext.BaseDirectory, "Assets", "Templates");
-        public string ScreenshotPath { get; init; } = Path.Combine(AppContext.BaseDirectory, "Assets", "Screenshots");
+        public string ScreenshotPath { get; init; } = Path.Combine(Path.GetTempPath(), "CoCBot", "Screenshots");
     }
 }

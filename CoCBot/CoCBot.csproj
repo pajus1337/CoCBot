@@ -9,6 +9,11 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.7" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Assets\Templates\" />
+    <Folder Include="Assets\Templates\league_slots\" />
   </ItemGroup>
+	<ItemGroup>
+		<Content Include="Assets\Templates\**\*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
 </Project>

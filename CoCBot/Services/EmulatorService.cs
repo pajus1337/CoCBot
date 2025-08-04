@@ -1,7 +1,9 @@
+using CoCBot.Configurations;
 using CoCBot.Interfaces;
 using CoCBot.Models;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 
@@ -9,9 +11,19 @@ namespace CoCBot.Services
 {
     public class EmulatorService : IEmulatorService
     {
-        private const int MOUSEEVENTF_LEFTDOWN = 0x02;
-        private const int MOUSEEVENTF_LEFTUP = 0x04;
         private string? _selectedDeviceId;
+
+        private readonly IScreenshotStorageService _screenshotStorageService;
+
+        public EmulatorService(IScreenshotStorageService screenshotStorageService)
+        {
+            _screenshotStorageService = screenshotStorageService;
+        }
+
+        public void SelectDevice(string deviceId)
+        {
+            _selectedDeviceId = deviceId;
+        }
 
         public void Connect()
         {
@@ -23,36 +35,53 @@ namespace CoCBot.Services
 
         public void TakeScreenshot()
         {
-            ExecuteADBCommand("exec-out screencap -p > screen.png", true);
-        }
-
-        public void ClickAt(int x, int y)
-        {
-            SetCursorPos(x, y);
-            mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, x, y, 0, 0);
-        }
-
-        private void ExecuteADBCommand(string command, bool useShell = false)
-        {
-            var adbArguments = string.IsNullOrEmpty(_selectedDeviceId) ? command : $"-s {_selectedDeviceId} {command}";
+            var adbArguments = string.IsNullOrEmpty(_selectedDeviceId) ? "exec-out screencap -p" : $"-s {_selectedDeviceId} exec-out screencap -p";
 
             var startInfo = new ProcessStartInfo
             {
-                FileName = useShell ? "cmd.exe" : "adb",
-                Arguments = useShell ? $"/C adb {adbArguments}" : adbArguments,
+                FileName = "adb",
+                Arguments = adbArguments,
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
 
-            Process.Start(startInfo)?.WaitForExit();
+            var screenshotPath = _screenshotStorageService.GetScreenshotPath();
+
+            using var process = new Process
+            {
+                StartInfo = startInfo
+            };
+
+            process.Start();
+
+            using var outputStream = process.StandardOutput.BaseStream;
+            using var fileStream = File.Create(screenshotPath);
+            outputStream.CopyTo(fileStream);
+
+            process.WaitForExit();
         }
 
+        public void ClickAt(int x, int y)
+        {
+            ExecuteADBCommand($"shell input tap {x} {y}");
+        }
 
-        [DllImport("user32.dll")]
-        private static extern bool SetCursorPos(int X, int Y);
+        private void ExecuteADBCommand(string command)
+        {
+            var adbArguments = string.IsNullOrEmpty(_selectedDeviceId) ? command : $"-s {_selectedDeviceId} {command}";
 
-        [DllImport("user32.dll")]
-        private static extern void mouse_event(int dwFlags, int dx, int dy, int cButtons, int dwExtraInfo);
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "adb",
+                Arguments = adbArguments,
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using var process = Process.Start(startInfo);
+            process?.WaitForExit();
+        }
     }
 }

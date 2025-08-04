@@ -29,6 +29,14 @@ namespace CoCBot.Controllers
             IsRunning = false;
         }
 
+        public async Task RunLeagueInviteAsync()
+        {
+            IsRunning = true;
+            Log("[BOT] League invite started.");
+            await _clanInviteService.InvitePlayersViaMyLeagueAsync();
+            Log("[BOT] League invite finished.");
+            IsRunning = false;
+        }
         public void Stop()
         {
             Log("[BOT] Automation stopped manually.");

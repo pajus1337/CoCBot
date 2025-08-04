@@ -28,5 +28,13 @@
         <Button Content="Stop"
                 Width="100"
                 Click="OnStopClick" />
+        <ComboBox x:Name="InviteModeSelector"
+                  SelectionChanged="OnInviteModeChanged"
+                  Width="200"
+                  Margin="10">
+            <ComboBoxItem Content="Clan Board"/>
+            <ComboBoxItem Content="My League"
+                          IsSelected="True" />
+        </ComboBox>
     </StackPanel>
 </Window>
