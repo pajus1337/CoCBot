@@ -6,10 +6,9 @@ using System.Threading.Tasks;
 
 namespace CoCBot.Interfaces
 {
-    public interface IClanInviteService
+    public interface IScreenshotStorageService
     {
-        Task RunAutoInviteAsync();
-        Task InvitePlayersViaMyLeagueAsync();
-
+        string GetScreenshotPath();
+        string GetScreenshotDirectory();
     }
 }

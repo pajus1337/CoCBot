@@ -16,44 +16,43 @@ namespace CoCBot.Services
     public class VisionService : IVisionService
     {
         private readonly IEmulatorService _emulatorService;
-        private readonly BotPathOptions _paths;
+        private readonly IScreenshotStorageService _screenshotStorage;
 
-        public VisionService(IEmulatorService emulatorService, BotPathOptions paths)
+        public VisionService(IEmulatorService emulatorService, IScreenshotStorageService screenshotStorage)
         {
             _emulatorService = emulatorService;
-            _paths = paths;
+            _screenshotStorage = screenshotStorage;
         }
-
 
         public async Task ClickOnAsync(string templatePath)
         {
-            // 1. Take screenshot and wait for file
             _emulatorService.TakeScreenshot();
-            var screenshotPath = Path.Combine(_paths.ScreenshotPath, "screen.png");
 
-            // 2. Delay to ensure file exists (in real impl: wait until file created)
+            var screenshotPath = _screenshotStorage.GetScreenshotPath();
+
             await Task.Delay(500);
 
             if (!File.Exists(screenshotPath) || !File.Exists(templatePath))
+            {
                 return;
+            }
 
-            // 3. Load images
             using var source = new Image<Bgr, byte>(screenshotPath);
             using var template = new Image<Bgr, byte>(templatePath);
 
-            // 4. Match template
             var result = source.MatchTemplate(template, TemplateMatchingType.CcoeffNormed);
             result.MinMax(out _, out double[] maxVals, out _, out Point[] maxLocs);
 
-            // 5. Validate match
+            // Validate match
             if (maxVals[0] < 0.8)
-                return; // No good match
+            {
+                return; // Match not found or below threshold
+            }
 
             var matchPoint = maxLocs[0];
             var centerX = matchPoint.X + template.Width / 2;
             var centerY = matchPoint.Y + template.Height / 2;
 
-            // 6. Click using emulator service
             _emulatorService.ClickAt(centerX, centerY);
         }
 
@@ -63,13 +62,11 @@ namespace CoCBot.Services
             using var template = new Image<Bgr, byte>(templatePath);
 
             using var result = screen.MatchTemplate(template, TemplateMatchingType.CcoeffNormed);
-            double[] minValues, maxValues;
-            Point[] minLocations, maxLocations;
-            result.MinMax(out minValues, out maxValues, out minLocations, out maxLocations);
+            result.MinMax(out double[] minVals, out double[] maxVals, out Point[] minLocs, out Point[] maxLocs);
 
-            if (maxValues[0] >= threshold)
+            if (maxVals[0] >= threshold)
             {
-                var matchLocation = maxLocations[0];
+                var matchLocation = maxLocs[0];
                 return new Point(matchLocation.X + template.Width / 2, matchLocation.Y + template.Height / 2);
             }
 

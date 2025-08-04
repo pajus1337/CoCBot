@@ -15,6 +15,7 @@ namespace CoCBot
             services.AddSingleton<IEmulatorService, EmulatorService>();
             services.AddSingleton<IEmulatorSelectorService, EmulatorSelectorService>();
             services.AddSingleton<IClanInviteService, ClanInviteService>();
+            services.AddSingleton<IScreenshotStorageService, ScreenshotStorageService>();
 
             // Bot Configurations
             services.AddSingleton(new BotPathOptions());
