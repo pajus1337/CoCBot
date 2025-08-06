@@ -2,6 +2,7 @@
 using CoCBot.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -25,7 +26,7 @@ namespace CoCBot.Services
 
         public async Task RunAutoInviteAsync()
         {
-            // Step 1: Open profile or Clan Castle
+            // Step 1: Open profile or Clan Castle ( first using prfile icon, might change in future development ) 
             await _visionService.ClickOnAsync(Path.Combine(_paths.TemplatePath, "profile_icon.png"));
             await Task.Delay(1500);
 
@@ -41,7 +42,7 @@ namespace CoCBot.Services
             await _visionService.ClickOnAsync(Path.Combine(_paths.TemplatePath, "notice_board_tab.png"));
             await Task.Delay(1200);
 
-            // Step 5: Click first clan on the list (e.g., Saiyaara)
+            // Step 5: Click first clan on the list (e.g., Saiyaara) ( We will have to rework the logic on pointing the target ) 
             await _visionService.ClickOnAsync(Path.Combine(_paths.TemplatePath, "clan_tile_1.png"));
             await Task.Delay(1300);
 
@@ -55,25 +56,70 @@ namespace CoCBot.Services
         public async Task InvitePlayersViaMyLeagueAsync()
         {
             await _visionService.ClickOnAsync(Path.Combine(_paths.TemplatePath, "my_league_tab.png"));
-            await Task.Delay(1500);
+            await Task.Delay(2600);
 
-            for (int playerNumber = 1; playerNumber <= 100; playerNumber++)
+            var trophyPath = Path.Combine(_paths.TemplatePath, "trophy_icon.png");
+            using var trophyTemplate = new Emgu.CV.Image<Emgu.CV.Structure.Bgr, byte>(trophyPath);
+
+            var invitedPoints = new HashSet<int>(); // track over Y
+            int maxScrolls = 20;
+
+            for (int i = 0; i < maxScrolls; i++)
             {
-                string playerSlotTemplate = $"player_slot_{playerNumber}.png";
-                string playerSlotPath = Path.Combine(_paths.TemplatePath, "league_slots", playerSlotTemplate);
+                var matches = await _visionService.FindAllTemplateMatchesAsync(trophyPath, 0.87);
 
-                await _visionService.ClickOnAsync(playerSlotPath);
-                await Task.Delay(1200);
+                var playersToInvite = matches
+                    .DistinctBy(p => p.Y / 10) // Uniue player by Y rounded to 10
+                    .Where(p => !invitedPoints.Contains((p.Y / 10) * 10))
+                    .OrderBy(p => p.Y)
+                    .Take(5)
+                    .ToList();
 
-                await _visionService.ClickOnAsync(Path.Combine(_paths.TemplatePath, "profile_button.png"));
-                await Task.Delay(1000);
+                foreach (var matchPoint in playersToInvite)
+                {
+                    var roundedY = (matchPoint.Y / 10) * 10;
 
-                await _visionService.ClickOnAsync(Path.Combine(_paths.TemplatePath, "invite_button.png"));
-                await Task.Delay(1000);
+                    var trophyRegion = new Rectangle(
+                        matchPoint.X - trophyTemplate.Width / 2,
+                        matchPoint.Y - trophyTemplate.Height / 2,
+                        trophyTemplate.Width,
+                        trophyTemplate.Height
+                    );
 
-                await _visionService.ClickOnAsync(Path.Combine(_paths.TemplatePath, "back_button.png"));
-                await Task.Delay(1000);
+                    await _visionService.ClickInRegionAsync(trophyRegion);
+                    await Task.Delay(1600);
+
+                    // Short Check if profil buttone PopUp
+                    var profileBtnPath = Path.Combine(_paths.TemplatePath, "profile_button.png");
+                    var found = await _visionService.FindButtonUsingTemplateAsync(profileBtnPath);
+
+                    if (found.HasValue)
+                    {
+                        invitedPoints.Add(matchPoint.Y); // Consider als Invited.
+
+                        await _visionService.ClickOnAsync(profileBtnPath);
+                        await Task.Delay(2800);
+
+                        await _visionService.ClickOnAsync(Path.Combine(_paths.TemplatePath, "invite_button.png"));
+                        await Task.Delay(2400);
+
+                        await _visionService.ClickOnAsync(Path.Combine(_paths.TemplatePath, "back_button.png"));
+                        await Task.Delay(1600);
+                    }
+                }
+
+                await ScrollDownAsync();
+                await Task.Delay(1800);
             }
+        }
+
+        private async Task ScrollDownAsync()
+        {
+            // Scroll down the player list ~ 5 positions. ( tested values ) 
+            var start = new Point(450, 600);
+            var end = new Point(450, 465);
+
+            await _emulatorService.SwipeAsync(start, end, durationMs: 240);
         }
     }
 }

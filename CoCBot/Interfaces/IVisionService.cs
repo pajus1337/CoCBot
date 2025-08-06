@@ -10,6 +10,9 @@ namespace CoCBot.Interfaces
     public interface IVisionService
     {
         Task ClickOnAsync(string templatePath);
-        Point? FindButtonUsingTemplate(string screenPath, string templatePath, double threshold);
+        Task ClickInRegionAsync(Rectangle region);
+        Task<Point?> FindButtonUsingTemplateAsync(string screenPath, string templatePath, double threshold);
+        Task<Point?> FindButtonUsingTemplateAsync(string templatePath, double threshold = 0.9);
+        Task<List<Point>> FindAllTemplateMatchesAsync(string templatePath, double threshold = 0.9);
     }
 }
