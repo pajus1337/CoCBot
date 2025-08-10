@@ -17,17 +17,18 @@ namespace CoCBot.Services
     {
         private readonly IEmulatorService _emulatorService;
         private readonly IScreenshotStorageService _screenshotStorage;
+        private readonly IClickRandomizer _clickRandomizer;
 
-        public VisionService(IEmulatorService emulatorService, IScreenshotStorageService screenshotStorage)
+        public VisionService(IEmulatorService emulatorService, IScreenshotStorageService screenshotStorage, IClickRandomizer clickRandomizer)
         {
             _emulatorService = emulatorService;
             _screenshotStorage = screenshotStorage;
+            _clickRandomizer = clickRandomizer;
         }
 
         public async Task ClickOnAsync(string templatePath)
         {
             _emulatorService.TakeScreenshot();
-
             var screenshotPath = _screenshotStorage.GetScreenshotPath();
 
             await Task.Delay(500);
@@ -50,14 +51,22 @@ namespace CoCBot.Services
             }
 
             var matchPoint = maxLocs[0];
-            var centerX = matchPoint.X + template.Width / 2;
-            var centerY = matchPoint.Y + template.Height / 2;
+            var region = new Rectangle(matchPoint.X, matchPoint.Y, template.Width, template.Height);
+            var randomPoint = _clickRandomizer.GetRandomPointInRegion(region);
 
-            _emulatorService.ClickAt(centerX, centerY);
+            await Task.Delay(_clickRandomizer.GetRandomDelay(200, 500));
+            _emulatorService.ClickAt(randomPoint.X, randomPoint.Y);
         }
 
-        public Point? FindButtonUsingTemplate(string screenPath, string templatePath, double threshold = 0.9)
+        public async Task<Point?> FindButtonUsingTemplateAsync(string screenPath, string templatePath, double threshold = 0.9)
         {
+            await Task.Delay(100);
+
+            if (!File.Exists(screenPath) || !File.Exists(templatePath))
+            {
+                return null;
+            }
+
             using var screen = new Image<Bgr, byte>(screenPath);
             using var template = new Image<Bgr, byte>(templatePath);
 
@@ -71,6 +80,72 @@ namespace CoCBot.Services
             }
 
             return null;
+        }
+
+        public async Task<Point?> FindButtonUsingTemplateAsync(string templatePath, double threshold = 0.9)
+        {
+            var screenshotPath = _screenshotStorage.GetScreenshotPath();
+            _emulatorService.TakeScreenshot();
+            await Task.Delay(300);
+
+            if (!File.Exists(screenshotPath) || !File.Exists(templatePath))
+            {
+                return null;
+            }
+
+            using var screen = new Image<Bgr, byte>(screenshotPath);
+            using var template = new Image<Bgr, byte>(templatePath);
+
+            using var result = screen.MatchTemplate(template, TemplateMatchingType.CcoeffNormed);
+            result.MinMax(out _, out double[] maxVals, out _, out Point[] maxLocs);
+
+            if (maxVals[0] >= threshold)
+            {
+                var matchLocation = maxLocs[0];
+                return new Point(matchLocation.X + template.Width / 2, matchLocation.Y + template.Height / 2);
+            }
+
+            return null;
+        }
+
+        public async Task<List<Point>> FindAllTemplateMatchesAsync(string templatePath, double threshold = 0.9)
+        {
+            var screenshotPath = _screenshotStorage.GetScreenshotPath();
+            _emulatorService.TakeScreenshot();
+            await Task.Delay(300);
+
+            var matches = new List<Point>();
+
+            if (!File.Exists(screenshotPath) || !File.Exists(templatePath))
+            {
+                return matches;
+            }
+
+            using var source = new Image<Bgr, byte>(screenshotPath);
+            using var template = new Image<Bgr, byte>(templatePath);
+            using var result = source.MatchTemplate(template, TemplateMatchingType.CcoeffNormed);
+
+            result.MinMax(out _, out _, out _, out _);
+
+            for (int y = 0; y < result.Rows; y++)
+            {
+                for (int x = 0; x < result.Cols; x++)
+                {
+                    var score = result[y, x].Intensity;
+                    if (score >= threshold)
+                    {
+                        matches.Add(new Point(x + template.Width / 2, y + template.Height / 2));
+                    }
+                }
+            }
+
+            return matches;
+        }
+        public async Task ClickInRegionAsync(Rectangle region)
+        {
+            var point = _clickRandomizer.GetRandomPointInRegion(region);
+            await Task.Delay(_clickRandomizer.GetRandomDelay(200, 500));
+            _emulatorService.ClickAt(point.X, point.Y);
         }
     }
 }

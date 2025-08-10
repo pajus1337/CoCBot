@@ -1,5 +1,6 @@
 using CoCBot.Configurations;
 using CoCBot.Controllers;
+using CoCBot.Helpers;
 using CoCBot.Interfaces;
 using CoCBot.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,6 +17,9 @@ namespace CoCBot
             services.AddSingleton<IEmulatorSelectorService, EmulatorSelectorService>();
             services.AddSingleton<IClanInviteService, ClanInviteService>();
             services.AddSingleton<IScreenshotStorageService, ScreenshotStorageService>();
+
+            // Helpers
+            services.AddSingleton<IClickRandomizer, ClickRandomizer>();
 
             // Bot Configurations
             services.AddSingleton(new BotPathOptions());
